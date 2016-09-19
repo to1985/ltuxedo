@@ -1,5 +1,3 @@
-require 'baselib'
-logger=BranchNative.Base.logger("test_ltuxedo.log")
 lt=require'ltuxedo_sv'
 ls=require'luasql.informix'
 env=assert(ls.informix())
@@ -14,7 +12,6 @@ withdraw=function(req)
 		return 'success'
 	end
 	local _,msg=pcall(draw,req)
-	logger.debug('withdraw',req,msg)
 	return msg
 end
 
@@ -27,7 +24,6 @@ deposit=function(req)
 		return 'success'
 	end
 	local _,msg=pcall(depo,req)
-	logger.debug('deposit',req,msg)
 	return msg
 end
 

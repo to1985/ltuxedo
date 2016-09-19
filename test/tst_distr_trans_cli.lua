@@ -1,5 +1,3 @@
-require 'baselib'
-logger=BranchNative.Base.logger("test_ltuxedo.log")
 lt=require'ltuxedo_nc'
 ls=require'luasql.informix'
 env=assert(ls.informix())
@@ -31,25 +29,21 @@ assert(snd_buf:set_raw(tostring(tonumber(transfer_amt))))
 assert(lt.tpbegin())
 local result,err=lt.tpcall('WITHDRAW',snd_buf,rcv_buf)
 if not result then
-	logger.error('withdraw',err)
 	assert(lt.tpabort())
 	os.exit()
 end
 local rcv=assert(rcv_buf:get_raw())
 if rcv ~= 'success' then
-	logger.error('withdraw',rcv)
 	assert(lt.tpabort())
 	os.exit()
 end
 local result,err=lt.tpcall('DEPOSIT',snd_buf,rcv_buf)
 if not result then
-	logger.error('deposit',err)
 	assert(lt.tpabort())
 	os.exit()
 end
 local rcv=assert(rcv_buf:get_raw())
 if rcv ~= 'success' then
-	logger.error('deposit',rcv)
 	assert(lt.tpabort())
 	os.exit()
 end

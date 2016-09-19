@@ -1,4 +1,3 @@
-require 'baselib'
 lt=require'ltuxedo_sv'
 
 ping=function(req)
@@ -13,7 +12,6 @@ checkpwd=function(req)
 	end
 end
 
-logger=BranchNative.Base.logger("test_ltuxedo.log")
 assert(lt.init_service('PING',ping))
 assert(lt.init_service('CHKPWD',checkpwd))
 assert(lt.mainloop('-g 1 -i 700'))

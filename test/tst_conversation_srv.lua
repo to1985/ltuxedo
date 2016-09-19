@@ -1,6 +1,4 @@
-require 'baselib'
 lt=require'ltuxedo_sv'
-logger=BranchNative.Base.logger("test_ltuxedo.log")
 
 send_file=function(cd,path,fn)
 	local buf=assert(lt.new_buffer('CARRAY',4096))
@@ -36,12 +34,10 @@ end
 fileserver=function(req,cd)
 	local mode,path,filename=string.match(req:get_raw(),'(%g+)\n+(%g+)\n+(%g+)')
 	local result=''
-	logger.debug(mode,path,filename)
 	if mode == 'GET' then r,result=pcall(send_file,cd,path,filename)
 	elseif mode == 'PUT' then r,result=pcall(rcv_file,cd,path,filename)
 	else result='incorrect func'
 	end
-	logger.debug(tostring(r),result)
 	return result
 end
 
