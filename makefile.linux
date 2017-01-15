@@ -1,0 +1,42 @@
+LUA_INCDIR = $(HOME)/include
+LUA_LIBDIR = $(HOME)/lib/lua
+
+TUX_INCS = -I$(TUXDIR)/include
+
+LUA_INCS = -I$(LUA_INCDIR)
+
+COMM_LIBS = -L$(HOME)/lib
+
+DRIVER_INCS = -I.. $(TUX_INCS) $(LUA_INCS)
+DRIVER_LIBS = $(COMM_LIBS)
+
+LIB_OPTION = -shared -fPIC
+WARN = 
+CFLAGS = -O2 -g -std=gnu99 -fPIC -DLUA_USE_POSIX -DLUA_USE_DLOPEN $(WARN)
+CC= gcc
+ECC= esql -w
+
+
+all: ltuxedo_nc ltuxedo_ws ltuxedo_sv
+ltuxedo_nc : ltuxedo_nc.so
+ltuxedo_ws : ltuxedo_ws.so
+ltuxedo_sv : ltuxedo_sv.so
+
+ltuxedo_nc.so: ltuxedo.c
+	$(CC) -c $(CFLAGS) $(DRIVER_INCS) -DCLI_NATIVE ltuxedo.c
+	buildclient -v -o $@ -f "$(LIB_OPTION) ltuxedo.o $(DRIVER_LIBS)"
+
+ltuxedo_ws.so: ltuxedo.c
+	$(CC) -c $(CFLAGS) $(DRIVER_INCS) -DCLI_WORKSTATION ltuxedo.c
+	buildclient -v -o $@ -w -f "$(LIB_OPTION) ltuxedo.o $(DRIVER_LIBS)"
+
+ltuxedo_sv.so: ltuxedo.c
+	$(CC) -c $(CFLAGS) $(DRIVER_INCS) -DSERVER ltuxedo.c
+	$(CC) -o $@ $(LIB_OPTION) ltuxedo.o $(DRIVER_LIBS) -L$(TUXDIR)/lib -ltux -lengine -lbuft -lfml32 -lpthread
+
+install:
+	cp -f *.so $(LUA_LIBDIR)
+
+clean:
+	rm -f *.so *.o
+

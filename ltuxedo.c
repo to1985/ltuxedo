@@ -207,7 +207,7 @@ static int ltuxedo_new_buffer(lua_State *L)
 	lua_setmetatable(L,-2);
 
 	strncpy(p_buf->type,buffer_type,sizeof(p_buf->type)-1);
-	strncpy(p_buf->sub_type,buffer_subtype,sizeof(p_buf->sub_type)-1);
+	if (buffer_subtype) strncpy(p_buf->sub_type,buffer_subtype,sizeof(p_buf->sub_type)-1);
 	p_buf->ptr=tpalloc(buffer_type,buffer_subtype,size);
 	p_buf->raw_len=0;
 
@@ -307,6 +307,32 @@ static int ltuxedo_fml_id(lua_State *L)
 	}
 
 	lua_pushinteger(L,id);
+	return 1;
+}
+
+/* Fname32
+           name,err=fld_name(field_id)
+            IN:
+          field_id : fml32 field id
+
+           OUT:
+              name : field name string
+               err : error msg
+*/
+static int ltuxedo_fml_name(lua_State *L)
+{
+	FLDID32 id=lua_tointeger(L,1);
+	char *name;
+
+	if ((name=Fname32(id)) == NULL)
+	{
+		set_errmsg_fml();
+		lua_pushnil(L);
+		lua_pushstring(L,errmsg);
+		return 2;
+	}
+
+	lua_pushstring(L,name);
 	return 1;
 }
 
@@ -1999,6 +2025,55 @@ static int ltuxedo_mainloop(lua_State *L)
 
 #endif
 
+
+/* -----------------------MISC/TEST FUNC-----------------------*/
+
+static int buffer_export(lua_State *L)
+{
+	LTUXEDO_BUFFER *p_buf=(LTUXEDO_BUFFER *)luaL_checkudata(L,1,LUAMETA_BUFFER);
+	long flag=luaL_optinteger(L,2,TPEX_STRING);
+	char *value=NULL;
+	long len=p_buf->size*4;
+
+	if ((value=malloc(len)) == NULL)
+	{
+		lua_pushnil(L);
+		lua_pushliteral(L,"alloc fail");
+		return 2;
+	}
+
+	if (tpexport(p_buf->ptr,p_buf->raw_len,value,&len,flag) == -1)
+	{
+		set_errmsg_tp();
+		lua_pushnil(L);
+		lua_pushstring(L,errmsg);
+		return 2;
+	}
+
+	lua_pushlstring(L,value,len);
+	free(value);
+	return 1;
+}
+
+static int buffer_import(lua_State *L)
+{
+	LTUXEDO_BUFFER *p_buf=(LTUXEDO_BUFFER *)luaL_checkudata(L,1,LUAMETA_BUFFER);
+	size_t len;
+	char *str=(char *)lua_tolstring(L,2,&len);
+	long flag=luaL_optinteger(L,3,TPEX_STRING);
+
+	if (tpimport(str,len,&p_buf->ptr,&p_buf->raw_len,flag) == -1)
+	{
+		set_errmsg_tp();
+		lua_pushnil(L);
+		lua_pushstring(L,errmsg);
+		return 2;
+	}
+
+	lua_pushvalue(L,1);
+	return 1;
+}
+
 /* -----------------------INITIATION-----------------------*/
 
 static void set_tuxedo_constant(lua_State *L)
@@ -2162,6 +2237,7 @@ static void set_tuxedo_constant(lua_State *L)
 		{"fneeded",ltuxedo_fml_needed},
 		{"fld_id",ltuxedo_fml_id},
 		{"fld_type",ltuxedo_fml_type},
+		{"fld_name",ltuxedo_fml_name},
 		{"fld_no",ltuxedo_fml_no},
 		{"mkfld_id",ltuxedo_fml_mkfldid},
 		{"tpcall",ltuxedo_tpcall},
@@ -2222,6 +2298,9 @@ static void set_tuxedo_constant(lua_State *L)
 		{"foccur",buffer_fml_occur},
 		{"ffindocc",buffer_fml_findocc},
 		{"ffield_iterator",buffer_fml_get_field_iter},
+		/*--------misc\test\-------*/
+		{"buff_export",buffer_export},
+		{"buff_import",buffer_import},
 		{NULL, NULL},
 	};
 
